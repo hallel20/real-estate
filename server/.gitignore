@@ -1,0 +1,30 @@
+.venv
+
+# lock files
+Pipfile.lock
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# mypy
+.mypy_cache/
+.mypy/
+
+# pytype
+.pytype/
+
+# pyre type checker
+.pyre/
+
+# pytype
+.pytype/
+
+# pyright
+.pyright/
+# pyre
+# pyright
+# pyrightconfig.json
+
+# environment variables
+.env
