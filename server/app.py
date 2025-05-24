@@ -2,7 +2,7 @@ import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_mail import Mail, Message  # Import Message
+from flask_mail import Mail
 from models import db
 from routes.auth import auth_bp
 from routes.properties import properties_bp
@@ -55,9 +55,10 @@ def create_app(config_class=Config):
 
     return app
 
-app = create_app()  # Create the Flask app instance
-migrate = Migrate(app, db)
-
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # This block is for development purposes only.
+    # In production, use a WSGI server like Gunicorn:
+    # gunicorn app:app
+    app.run(debug=Config.DEBUG)

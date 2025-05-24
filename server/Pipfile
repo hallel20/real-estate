@@ -16,6 +16,7 @@ celery = "*"
 mysqlclient = "*"
 flask-mail = "*"
 python-dotenv = "*"
+gunicorn = "*"
 
 [dev-packages]
 
