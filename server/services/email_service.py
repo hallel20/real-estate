@@ -1,7 +1,7 @@
 from flask import current_app
 from flask_mail import Mail, Message
 
-mail = Mail() #initialize
+mail = Mail() # Define the Mail instance here; it will be initialized by app.py
 
 def send_welcome_email(email, username):
     """Sends a welcome email to the user."""
@@ -13,7 +13,8 @@ def send_welcome_email(email, username):
 def send_password_reset_email(email, token):
     """Sends a password reset email to the user."""
     subject = "Password Reset Request"
-    reset_link = f"http://yourfrontend.com/reset-password?token={token}"
+    frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000') # Fallback if not configured
+    reset_link = f"{frontend_url}/reset-password?token={token}"
     body = f"To reset your password, click the following link: {reset_link}\n\nIf you did not request this, please ignore this email."
     send_email(email, subject, body)
 
@@ -27,12 +28,19 @@ def send_inquiry_notification_email(agent_email, inquiry_id):
 
 def send_email(to, subject, body):
     """Sends an email using Flask-Mail."""
-    msg = Message(subject=subject, recipients=[to])
-    msg.body = body
+    # Use MAIL_DEFAULT_SENDER from app config, fallback to MAIL_USERNAME
+    sender_email = current_app.config.get('MAIL_DEFAULT_SENDER')
+    if not sender_email: # If MAIL_DEFAULT_SENDER is None or empty string
+        sender_email = current_app.config.get('MAIL_USERNAME')
+
+    if not sender_email:
+        current_app.logger.error("Email sender (MAIL_DEFAULT_SENDER or MAIL_USERNAME) is not configured.")
+        # Depending on your app's needs, you might raise an error here or return
+        raise ValueError("Email sender not configured. Please set MAIL_DEFAULT_SENDER or MAIL_USERNAME in your environment.")
+
+    msg = Message(subject=subject, recipients=[to], body=body, sender=sender_email)
     try:
         mail.send(msg)
     except Exception as e:
-        print(f"Error sending email: {e}") #log the error
-        # Consider more sophisticated error handling here, such as logging
-        # the error and possibly retrying a few times before giving up.
+        current_app.logger.error(f"Error sending email to {to} with subject '{subject}': {e}")
         raise #re-raise

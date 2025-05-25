@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, Search, User, Menu, X, LogOut } from 'lucide-react';
+import { Home, User, Menu, X, LogOut } from "lucide-react";
 import { useAuthStore } from '../../store/authStore';
 import Button from '../ui/Button';
 
@@ -13,9 +13,9 @@ const Header: React.FC = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
     setIsMenuOpen(false);
   };
 

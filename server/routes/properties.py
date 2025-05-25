@@ -2,29 +2,9 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Property, Image, Inquiry
 from sqlalchemy import or_, and_
-from datetime import datetime
 from services.role_required import role_required
 
 properties_bp = Blueprint('properties', __name__)
-
-def property_to_dict(property_obj):
-    return {
-        'id': property_obj.id,
-        'user_id': property_obj.user_id,
-        'title': property_obj.title,
-        'description': property_obj.description,
-        'location': property_obj.location,
-        'price': property_obj.price,
-        'property_type': property_obj.property_type,
-        'status': property_obj.status,
-        'bedrooms': property_obj.bedrooms,
-        'bathrooms': property_obj.bathrooms,
-        'area': property_obj.area,
-        'created_at': property_obj.created_at.isoformat(),
-        'updated_at': property_obj.updated_at.isoformat(),
-        'images': [img.url for img in property_obj.images]
-        # 'amenities': omitted for simplicity here
-    }
 
 @properties_bp.route('', methods=['GET'])
 def get_properties():
@@ -62,7 +42,7 @@ def get_properties():
     query = query.order_by(order)
 
     pagination = query.paginate(page=page, per_page=page_size, error_out=False)
-    properties = [property_to_dict(p) for p in pagination.items]
+    properties = [p.serialize() for p in pagination.items]
 
     return jsonify({
         'total': pagination.total,
@@ -76,8 +56,7 @@ def get_properties():
 @properties_bp.route('/<int:property_id>', methods=['GET'])
 def get_property(property_id):
     property_obj = Property.query.get_or_404(property_id)
-    data = property_to_dict(property_obj)
-    # To add: amenities and inquiries if needed
+    data = property_obj.serialize()
     return jsonify(data)
 
 
@@ -100,6 +79,8 @@ def create_property():
     bedrooms = data.get('bedrooms')
     bathrooms = data.get('bathrooms')
     area = data.get('area')
+    year_built = data.get('year_built')
+    amenities = data.get('amenities')
     images = data.get('images', [])  # list of image URLs
 
     if not all([title, description, location, price]):
@@ -116,8 +97,8 @@ def create_property():
         bedrooms=bedrooms,
         bathrooms=bathrooms,
         area=area,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        year_built=year_built,
+        amenities=amenities
     )
     db.session.add(prop)
     db.session.commit()
@@ -128,7 +109,7 @@ def create_property():
         db.session.add(img)
     db.session.commit()
 
-    return jsonify(property_to_dict(prop)), 201
+    return jsonify(prop.serialize()), 201
 
 
 @properties_bp.route('/<int:property_id>', methods=['PUT'])
@@ -144,7 +125,9 @@ def update_property(property_id):
 
     data = request.get_json()
 
-    for key in ['title', 'description', 'location', 'price', 'property_type', 'status', 'bedrooms', 'bathrooms', 'area']:
+    updatable_fields = ['title', 'description', 'location', 'price', 'property_type', 'status', 
+                        'bedrooms', 'bathrooms', 'area', 'year_built', 'amenities']
+    for key in updatable_fields:
         if key in data:
             setattr(prop, key, data[key])
 
@@ -158,9 +141,8 @@ def update_property(property_id):
             img = Image(property_id=prop.id, url=url)
             db.session.add(img)
 
-    prop.updated_at = datetime.utcnow()
     db.session.commit()
-    return jsonify(property_to_dict(prop))
+    return jsonify(prop.serialize())
 
 
 @properties_bp.route('/<int:property_id>', methods=['DELETE'])
@@ -174,10 +156,9 @@ def delete_property(property_id):
     if prop.user_id != user_id and user.role != 'admin':
         return jsonify({'error': 'Unauthorized - not owner or admin'}), 403
 
-    # Delete all images first
-    Image.query.filter_by(property_id=prop.id).delete()
+    # Images will be deleted automatically due to cascade="all, delete-orphan" 
+    # in the Property.images relationship if you added that to models.py.
     # Delete property
     db.session.delete(prop)
     db.session.commit()
     return jsonify({'message': 'Property deleted successfully'})
-

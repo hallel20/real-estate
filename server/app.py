@@ -2,22 +2,22 @@ import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_mail import Mail
 from models import db
-from routes.auth import auth_bp
+from services.email_service import mail # Import the mail instance
+from routes.auth import auth_bp, jwt
 from routes.properties import properties_bp
 from routes.users import users_bp
 from routes.inquiries import inquiries_bp
+from routes.upload import upload_bp
 from config import Config
 
-mail = Mail()
-db = db
 migrate = Migrate()
 
 def create_app(config_class=Config):
     """
     Creates and configures the Flask application.
     """
+    
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -25,13 +25,15 @@ def create_app(config_class=Config):
     mail.init_app(app)  # Initialize Flask-Mail
     db.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
+    jwt.init_app(app) # Initialize JWTManager
+    CORS(app, origins=['http://localhost:3310', 'https://realestate.cyberwizdev.com.ng'], supports_credentials=True)
 
     # Register blueprints here
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(properties_bp, url_prefix='/api/properties')
     app.register_blueprint(users_bp, url_prefix='/api/users')
     app.register_blueprint(inquiries_bp, url_prefix='/api/inquiries')
+    app.register_blueprint(upload_bp, url_prefix='/api/upload')
 
     # Error handling
     @app.errorhandler(400)

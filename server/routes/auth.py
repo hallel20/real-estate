@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from models import db, User
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     create_access_token, jwt_required,
     get_jwt_identity, unset_jwt_cookies,
@@ -8,6 +7,7 @@ from flask_jwt_extended import (
 )
 from services.email_service import send_welcome_email, send_password_reset_email  # Import email functions
 from datetime import datetime, timedelta
+import bcrypt
 import uuid
 
 auth_bp = Blueprint('auth', __name__)
@@ -31,7 +31,8 @@ def register():
     if User.query.filter((User.username == username) | (User.email == email)).first():
         return jsonify({"error": "Username or email already exists"}), 400
 
-    hashed_password = generate_password_hash(password)
+    # Hash password with bcrypt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     user = User(
         username=username,
@@ -54,30 +55,31 @@ def register():
         return jsonify({"message": "User registered successfully, but there was an error sending the welcome email."}), 201  # Still return 201
 
 
-    return jsonify({"message": "User registered successfully", "user_id": user.id}), 201
+    return jsonify(user.serialize()), 201
 
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username_or_email = data.get('username') or data.get('email')
+    username_or_email = data.get('email')
     password = data.get('password')
 
     if not username_or_email or not password:
         return jsonify({"error": "Username/email and password are required"}), 400
 
-    user = User.query.filter(
+    user: User = User.query.filter(
         (User.username == username_or_email) | (User.email == username_or_email)
     ).first()
 
-    if not user or not check_password_hash(user.password, password):
+    # Check password with bcrypt
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    access_token = create_access_token(identity=user.id)
-    response = jsonify({"message": "Login successful"})
+    access_token = create_access_token(identity=str(user.id))
+    response = jsonify(user.serialize())
 
     # Set JWT access token in HttpOnly secure cookie
-    set_access_cookies(response, access_token, max_age=3600, secure=True, samesite='Strict')
+    set_access_cookies(response, access_token, max_age=3600)
 
     return response, 200
 
@@ -138,7 +140,8 @@ def reset_password():
     if datetime.utcnow() > getattr(user, 'reset_token_expire', datetime.utcnow()):
         return jsonify({"error": "Token expired"}), 400
 
-    user.password = generate_password_hash(new_password)
+    # Hash new password with bcrypt
+    user.password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     user.reset_token = None
     user.reset_token_expire = None
     db.session.commit()
