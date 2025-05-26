@@ -23,7 +23,7 @@ import { Loader } from "lucide-react";
 const inputClass =
   "mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none invalid:border-pink-500 invalid:text-pink-600 focus:invalid:border-pink-500 focus:invalid:ring-pink-500";
 
-const PropertyCreateForm: React.FC = () => {
+const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmittingApi, setIsSubmittingApi] = useState(false);
 
@@ -33,6 +33,7 @@ const PropertyCreateForm: React.FC = () => {
     control,
     setValue,
     watch,
+    reset,
     formState: { errors, isSubmitting: isFormSubmitting },
   } = useForm<PropertyFormData>({
     // @ts-ignore
@@ -65,7 +66,8 @@ const PropertyCreateForm: React.FC = () => {
       console.log("Property created:", response);
       toast.success("Property created successfully!");
       // Optionally reset form or redirect:
-      // reset();
+      reset();
+      onClose();
     } catch (error: any) {
       console.error("Failed to create property:", error);
       setApiError(
@@ -83,7 +85,7 @@ const PropertyCreateForm: React.FC = () => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit as any)}
-      className="space-y-6 p-4 max-w-2xl mx-auto bg-white shadow-md rounded-lg"
+      className="space-y-6 p-4 text-start max-w-2xl mx-auto bg-white shadow-md rounded-lg"
     >
       <h2 className="text-2xl font-semibold text-gray-800">
         Create New Property Listing

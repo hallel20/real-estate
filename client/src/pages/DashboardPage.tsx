@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { Home, User, Heart, MessageSquare, Plus, Edit, Trash2 } from 'lucide-react';
+import { Home, User, Heart, MessageSquare, Edit, Trash2 } from "lucide-react";
 import { useAuthStore } from '../store/authStore';
 import { usePropertyStore } from '../store/propertyStore';
 import { useInquiryStore } from '../store/inquiryStore';
@@ -134,10 +134,7 @@ const DashboardPage: React.FC = () => {
                   <p className="text-gray-600 mb-4">
                     You haven't added any properties to your account.
                   </p>
-                  <Button>
-                    <Plus className="h-5 w-5 mr-1" />
-                    Add Your First Property
-                  </Button>
+                  <AddProperty title="Add Your First Property" />
                 </div>
               ) : (
                 <div className="space-y-4">
