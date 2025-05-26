@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 import cloudinary
 import cloudinary.uploader
-from cloudinary.utils import cloudinary_url
 from config import Config
 from services.role_required import role_required
 from flask_jwt_extended import jwt_required
