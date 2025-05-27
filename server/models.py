@@ -44,7 +44,6 @@ class Property(db.Model):
     zip_code = db.Column(db.String(20), nullable=False)
     latitude = db.Column(db.Float, nullable=True)
     price = db.Column(db.Float, nullable=False)
-    price = db.Column(db.Float, nullable=False)
     property_type = db.Column(db.String(50))
     status = db.Column(db.String(50))
     bedrooms = db.Column(db.Integer)
@@ -99,13 +98,77 @@ class Image(db.Model):
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     url = db.Column(db.String(200), nullable=False)
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'property_id': self.property_id,
+            'url': self.url
+        }
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'message': self.message,
+            'chat_id': self.chat_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+class Chat(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    messages = db.relationship('Message', backref='chat', lazy=True)
+    # Link to the Inquiry that originated this chat (if any)
+    inquiry_id = db.Column(db.Integer, db.ForeignKey('inquiry.id'), nullable=True, unique=True)
+    inquiry = db.relationship('Inquiry', foreign_keys=[inquiry_id], backref=db.backref('chat', uselist=False))
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    reciever_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Consider renaming to receiver_id
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'sender_id': self.sender_id,
+            'reciever_id': self.reciever_id,
+            'property_id': self.property_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            # You might want to include message_ids or inquiry_id if needed, e.g.:
+            # 'message_ids': [msg.id for msg in self.messages],
+            # 'inquiry_id': self.inquiry.id if self.inquiry else None
+        }
+
 class Inquiry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     message = db.Column(db.Text, nullable=False)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # User who made the inquiry, if registered
+    status = db.Column(db.String(50), default='pending', nullable=False) # e.g., pending, responded, closed
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # This default is used
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'message': self.message,
+            'property_id': self.property_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'user_id': self.user_id,
+            'status': self.status
+        }
 
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -115,3 +178,12 @@ class Favorite(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     # Add any additional fields as necessary
     # For example, you might want to track when the favorite was added or updated
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'property_id': self.property_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }

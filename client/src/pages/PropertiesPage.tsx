@@ -4,10 +4,11 @@ import { usePropertyStore } from '../store/propertyStore';
 import PropertyCard from '../components/property/PropertyCard';
 import PropertyFilter from '../components/property/PropertyFilter';
 import { PropertyFilter as FilterType } from '../types';
-import { Grid, List } from 'lucide-react';
+import { Grid, List, MapPin } from "lucide-react";
 
 const PropertiesPage: React.FC = () => {
-  const { properties, isLoading, error, setFilters } = usePropertyStore();
+  const { properties, isLoading, error, setFilters, fetchFavoriteProperties } =
+    usePropertyStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -45,6 +46,11 @@ const PropertiesPage: React.FC = () => {
     // Apply filters
     setFilters(urlFilters);
   }, [searchParams, setFilters]);
+
+  useEffect(() => {
+    fetchFavoriteProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFilter = (filters: FilterType) => {
     // Update URL params

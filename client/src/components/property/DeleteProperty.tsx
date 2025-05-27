@@ -14,7 +14,7 @@ export default function DeleteProperty({
   property: Property;
 }) {
   const { mutate: deleteProperty, isPending } = useDeleteProperty();
-  const { fetchUserProperties } = usePropertyStore();
+  const { fetchUserProperties, fetchFavoriteProperties } = usePropertyStore();
   const [open, setOpen] = useState(false);
 
   const handleClose = () => {
@@ -25,6 +25,7 @@ export default function DeleteProperty({
     try {
       await deleteProperty(id);
       await fetchUserProperties(); // Refresh user properties after deletion
+      fetchFavoriteProperties();
       handleClose();
     } catch (error) {
       console.error("Failed to delete property:", error);

@@ -32,7 +32,7 @@ const PropertyCreateForm: React.FC<{
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmittingApi, setIsSubmittingApi] = useState(false);
 
-  const { fetchUserProperties } = usePropertyStore();
+  const { fetchUserProperties, fetchFavoriteProperties } = usePropertyStore();
 
   const {
     register,
@@ -97,6 +97,7 @@ const PropertyCreateForm: React.FC<{
       reset();
       onClose();
       fetchUserProperties();
+      fetchFavoriteProperties();
     } catch (error: any) {
       console.error("Failed to create property:", error);
       setApiError(

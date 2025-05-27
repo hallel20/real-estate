@@ -25,11 +25,14 @@ const HomePage: React.FC = () => {
         </div>
         <div className="container mx-auto px-4 py-24 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Find Your Dream Home</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Find Your Dream Home
+            </h1>
             <p className="text-xl mb-8">
-              Discover the perfect property from our extensive collection of homes, apartments, and commercial spaces.
+              Discover the perfect property from our extensive collection of
+              homes, apartments, and commercial spaces.
             </p>
-            
+
             {/* Search Bar */}
             <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col md:flex-row">
               <div className="flex-grow relative">
@@ -55,9 +58,12 @@ const HomePage: React.FC = () => {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Properties</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Featured Properties
+            </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Explore our handpicked selection of premium properties that offer exceptional value and amenities.
+              Explore our handpicked selection of premium properties that offer
+              exceptional value and amenities.
             </p>
           </div>
 
@@ -87,9 +93,12 @@ const HomePage: React.FC = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Browse by Property Type</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Browse by Property Type
+            </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Whether you're looking for a cozy apartment, spacious house, or commercial space, we have options for every need.
+              Whether you're looking for a cozy apartment, spacious house, or
+              commercial space, we have options for every need.
             </p>
           </div>
 
@@ -106,7 +115,9 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="p-6 text-center">
                   <Home className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Houses</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    Houses
+                  </h3>
                   <p className="text-gray-600">Find your perfect family home</p>
                 </div>
               </div>
@@ -124,7 +135,9 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="p-6 text-center">
                   <Building className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Apartments</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    Apartments
+                  </h3>
                   <p className="text-gray-600">Modern urban living spaces</p>
                 </div>
               </div>
@@ -142,7 +155,9 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="p-6 text-center">
                   <Building className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Commercial</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    Commercial
+                  </h3>
                   <p className="text-gray-600">Prime business locations</p>
                 </div>
               </div>
@@ -160,7 +175,9 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="p-6 text-center">
                   <MapPin className="h-8 w-8 mx-auto mb-3 text-blue-600" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">Land</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    Land
+                  </h3>
                   <p className="text-gray-600">Build your dream from scratch</p>
                 </div>
               </div>
@@ -172,18 +189,28 @@ const HomePage: React.FC = () => {
       {/* Call to Action */}
       <section className="py-16 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Find Your Perfect Property?</h2>
+          <h2 className="text-3xl font-bold mb-6">
+            Ready to Find Your Perfect Property?
+          </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who found their dream properties with us.
+            Join thousands of satisfied customers who found their dream
+            properties with us.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/properties">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+              <Button
+                size="lg"
+                className="bg-white !text-blue-600 hover:!bg-gray-100"
+              >
                 Browse Properties
               </Button>
             </Link>
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-blue-700">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white !text-white hover:!bg-blue-700"
+              >
                 Contact Us
               </Button>
             </Link>

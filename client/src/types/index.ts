@@ -60,11 +60,42 @@ export interface PropertyFilter {
 
 export interface Inquiry {
   id: string;
-  propertyId: string;
+  property_id: string;
   userId: string;
   message: string;
-  contactEmail: string;
-  contactPhone?: string;
+  email: string;
+  name: string;
   createdAt: string;
-  status: 'pending' | 'responded' | 'closed';
+  status: "pending" | "responded" | "closed";
+}
+
+export interface Favorite {
+  id: string;
+  user_id: string;
+  property_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Chat {
+  id: number; // Or string, depending on your backend
+  sender_id: number; // Or string
+  reciever_id: number; // Or string
+  property_id: number; // Or string
+  inquiry_id: number | null; // Or string
+  created_at: string; // ISO string
+  updated_at: string; // ISO string
+  // Add other fields if your backend serializes them (e.g., last message snippet, other user info)
+  // last_message?: string;
+  // other_user?: { id: number; username: string; /* ... */ };
+}
+
+export interface Message {
+  id: number; // Or string
+  chat_id: number; // Or string
+  message: string;
+  created_at: string; // ISO string
+  updated_at: string; // ISO string
+  // Add sender info if needed, though often messages imply the sender is the current user
+  // sender_id: number; // Or string
 }

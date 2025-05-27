@@ -18,6 +18,7 @@ const DashboardPage: React.FC = () => {
   const {
     userProperties,
     fetchUserProperties,
+    fetchFavoriteProperties,
     favoriteProperties,
     properties,
     fetchProperties,
@@ -28,6 +29,7 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchUserProperties();
+      fetchFavoriteProperties();
       fetchUserInquiries(user.id);
       fetchProperties(); // Fetch all properties to resolve favorite details and inquiry property details
     }
@@ -36,6 +38,7 @@ const DashboardPage: React.FC = () => {
     user,
     fetchUserProperties,
     fetchUserInquiries,
+    fetchFavoriteProperties,
     fetchProperties,
   ]);
 
@@ -145,14 +148,17 @@ const DashboardPage: React.FC = () => {
 
         {/* Main Content */}
         <div className="lg:col-span-3">
-          <Suspense
-            fallback={<Spinner />}
-          >
+          <Suspense fallback={<Spinner />}>
             <Routes>
               <Route index element={<Navigate to="properties" replace />} />
               <Route
                 path="properties"
-                element={<MyPropertiesTab isLoading={isPropertiesLoading} userProperties={userProperties} />}
+                element={
+                  <MyPropertiesTab
+                    isLoading={isPropertiesLoading}
+                    userProperties={userProperties}
+                  />
+                }
               />
               <Route
                 path="favorites"
@@ -168,6 +174,7 @@ const DashboardPage: React.FC = () => {
                   <InquiriesTab
                     userInquiries={userInquiries}
                     properties={properties}
+                    userChats={user?.chats || []} // Assuming user.chats is available
                   />
                 }
               />

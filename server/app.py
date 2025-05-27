@@ -9,6 +9,8 @@ from routes.properties import properties_bp
 from routes.users import users_bp
 from routes.inquiries import inquiries_bp
 from routes.upload import upload_bp
+from routes.favourites import favourites_bp
+from routes.chat import chat_bp
 from config import Config
 
 migrate = Migrate()
@@ -28,14 +30,16 @@ def create_app(config_class=Config):
     jwt.init_app(app) # Initialize JWTManager
     CORS(app, origins=['http://localhost:3310', 'https://realestate.cyberwizdev.com.ng'], supports_credentials=True)
 
-    # Register blueprints here
+    # Registering blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(properties_bp, url_prefix='/api/properties')
+    app.register_blueprint(favourites_bp, url_prefix='/api/favourites')
     app.register_blueprint(users_bp, url_prefix='/api/users')
     app.register_blueprint(inquiries_bp, url_prefix='/api/inquiries')
     app.register_blueprint(upload_bp, url_prefix='/api/upload')
+    app.register_blueprint(chat_bp, url_prefix='/api/chat')
 
-    # Error handling
+    # Error handlers
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({'error': 'Bad Request', 'message': error.description}), 400

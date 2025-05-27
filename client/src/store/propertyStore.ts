@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Property, PropertyFilter, PropertyResponse } from "../types";
+import { Favorite, Property, PropertyFilter, PropertyResponse } from "../types";
 import { api } from "../lib/axiosInstance"; // Assuming api is here, adjust if necessary
 
 interface PropertyState {
@@ -16,6 +16,7 @@ interface PropertyState {
   fetchFeaturedProperties: () => Promise<void>;
   fetchUserProperties: () => Promise<void>;
   fetchPropertyById: (id: string) => Promise<void>;
+  fetchFavoriteProperties: () => Promise<void>;
   toggleFavorite: (propertyId: string) => void;
   setFilters: (filters: PropertyFilter) => void;
 }
@@ -39,34 +40,36 @@ export const usePropertyStore = create<PropertyState>((set, get) => ({
 
       // Construct query parameters from filters
       if (filters.location) {
-        params.append('location', filters.location);
+        params.append("location", filters.location);
       }
       if (filters.minPrice) {
-        params.append('minPrice', filters.minPrice.toString());
+        params.append("minPrice", filters.minPrice.toString());
       }
       if (filters.maxPrice) {
-        params.append('maxPrice', filters.maxPrice.toString());
+        params.append("maxPrice", filters.maxPrice.toString());
       }
       if (filters.propertyType) {
-        params.append('propertyType', filters.propertyType);
+        params.append("propertyType", filters.propertyType);
       }
       if (filters.status) {
-        params.append('status', filters.status);
+        params.append("status", filters.status);
       }
       if (filters.minBedrooms) {
-        params.append('minBedrooms', filters.minBedrooms.toString());
+        params.append("minBedrooms", filters.minBedrooms.toString());
       }
       if (filters.minBathrooms) {
-        params.append('minBathrooms', filters.minBathrooms.toString());
+        params.append("minBathrooms", filters.minBathrooms.toString());
       }
       if (filters.minArea) {
-        params.append('minArea', filters.minArea.toString());
+        params.append("minArea", filters.minArea.toString());
       }
       if (filters.keywords) {
-        params.append('keywords', filters.keywords);
+        params.append("keywords", filters.keywords);
       }
 
-      const response = await api.get<PropertyResponse>(`/properties?${params.toString()}`);
+      const response = await api.get<PropertyResponse>(
+        `/properties?${params.toString()}`
+      );
       const properties: Property[] = response.data.properties;
 
       set({ properties: properties, isLoading: false });
@@ -124,19 +127,49 @@ export const usePropertyStore = create<PropertyState>((set, get) => ({
     }
   },
 
-  toggleFavorite: (propertyId) => {
-    set((state) => {
-      const favorites = [...state.favoriteProperties];
-      const index = favorites.indexOf(propertyId);
+  fetchFavoriteProperties: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.get<Favorite[]>("/favourites");
+      const data = response.data;
 
-      if (index === -1) {
-        favorites.push(propertyId);
+      const favoriteProperties = data.map((favorite) =>
+        String(favorite.property_id)
+      );
+
+      set({ favoriteProperties, isLoading: false });
+      // console.log("Fetched favorite properties:", favoriteProperties);
+    } catch (error) {
+      set({ error: "Failed to fetch favorite properties", isLoading: false });
+      console.error("Error fetching favorite properties:", error);
+    }
+  },
+
+  toggleFavorite: async (propertyId) => {
+    const state = get();
+    const oldFavoriteProperties = state.favoriteProperties;
+    const isFavorite = state.favoriteProperties.includes(propertyId);
+
+    try {
+      if (isFavorite) {
+        set({
+          favoriteProperties: oldFavoriteProperties.filter(
+            (id) => id !== propertyId
+          ),
+        });
+        await api.delete(`/favourites/${propertyId}`);
       } else {
-        favorites.splice(index, 1);
+        set({
+          favoriteProperties: [...oldFavoriteProperties, propertyId],
+        });
+        await api.post(`/favourites`, { property_id: propertyId });
       }
-
-      return { favoriteProperties: favorites };
-    });
+    } catch (error) {
+      set({
+        favoriteProperties: oldFavoriteProperties,
+      });
+      console.error("Error toggling favorite:", error);
+    }
   },
 
   setFilters: (filters) => {

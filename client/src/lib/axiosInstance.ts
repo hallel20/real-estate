@@ -15,9 +15,9 @@ axiosInstance.interceptors.request.use(
       config.method &&
       methodsRequiringCsrf.includes(config.method.toLowerCase())
     ) {
-      console.log("Raw document.cookie in request interceptor:", document.cookie); // Log the raw cookie string
+      // console.log("Raw document.cookie in request interceptor:", document.cookie); // Log the raw cookie string
       const csrfToken = Cookies.get("csrf_access_token"); // Use Cookies.get()
-      console.log("CSRF Token from Cookies.get:", csrfToken); // Log what Cookies.get() found
+      // console.log("CSRF Token from Cookies.get:", csrfToken); // Log what Cookies.get() found
       if (csrfToken) {
         config.headers["X-CSRF-TOKEN"] = csrfToken;
       }
