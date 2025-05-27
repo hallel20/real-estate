@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import Dialog from "../ui/Dialog";
-import PropertyCreateForm from "./AddPropertyForm";
 import Button from "../ui/Button";
 import { Plus } from "lucide-react";
+import Spinner from "../Loading";
 
+const PropertyCreateForm = lazy(() => import("./PropertyForm"));
 export default function AddProperty({ title }: { title?: string }) {
   const [open, setOpen] = useState(false);
 
@@ -18,7 +19,9 @@ export default function AddProperty({ title }: { title?: string }) {
         {title || "Add Property"}
       </Button>
       <Dialog isOpen={open} onClose={handleClose}>
-        <PropertyCreateForm onClose={handleClose} />
+        <Suspense fallback={<Spinner />}>
+          <PropertyCreateForm onClose={handleClose} />
+        </Suspense>
       </Dialog>
     </>
   );

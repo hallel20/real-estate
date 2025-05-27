@@ -37,7 +37,13 @@ class Property(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(200), nullable=False)
+    location = db.Column(db.String(200), nullable=True)
+    address = db.Column(db.String(200), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100), nullable=False)
+    zip_code = db.Column(db.String(20), nullable=False)
+    latitude = db.Column(db.Float, nullable=True)
+    price = db.Column(db.Float, nullable=False)
     price = db.Column(db.Float, nullable=False)
     property_type = db.Column(db.String(50))
     status = db.Column(db.String(50))
@@ -56,22 +62,36 @@ class Property(db.Model):
 
     def serialize(self):
         return {
-            'id': self.id,
-            'user_id': self.user_id,
+            'id': str(self.id),
             'title': self.title,
             'description': self.description,
-            'location': self.location,
+            # 'user': self.user.serialize() if self.user else None, # Requires user relationship to be loaded
             'price': self.price,
-            'property_type': self.property_type,
+            'location': {
+                'address': self.address,
+                'city': self.city,
+                'state': self.state,
+                'zipCode': self.zip_code,
+                'latitude': self.latitude,
+                'longitude': None,  # Add if you have longitude data
+            },
+            'propertyType': self.property_type,
             'status': self.status,
-            'bedrooms': self.bedrooms,
-            'bathrooms': self.bathrooms,
-            'area': self.area,
-            'year_built': self.year_built,
-            'amenities': self.amenities,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'images': [img.url for img in self.images] if self.images else []
+            'features': {
+                'bedrooms': self.bedrooms,
+                'bathrooms': self.bathrooms,
+                'area': self.area,
+                'yearBuilt': self.year_built,
+                'parking': None, # Add if you have parking data
+            },
+            # Assuming amenities are stored as a comma-separated string
+            # If stored as JSON, you might use json.loads(self.amenities)
+            'amenities': [amenity.strip() for amenity in self.amenities.split(',')] if self.amenities else [],
+            'images': [img.url for img in self.images] if self.images else [],
+            'ownerId': str(self.user_id),
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'updatedAt': self.updated_at.isoformat() if self.updated_at else None,
+            'isFeatured': False # Add logic if you have a way to determine this
         }
 
 class Image(db.Model):

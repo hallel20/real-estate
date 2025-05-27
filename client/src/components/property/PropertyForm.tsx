@@ -12,20 +12,27 @@ import {
   propertyFormSchema,
   PropertyFormData,
 } from "../../lib/schemas/propertySchema";
-import { createProperty } from "../../services/api";
+import { createProperty, updateProperty } from "../../services/api";
 import ImageUploader from "../ImageUploader"; // Adjust path as needed
 import Input from "../ui/Input";
 import Textarea from "../ui/Textarea";
 import Select from "../ui/Select";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
+import { Property } from "../../types";
+import { usePropertyStore } from "../../store/propertyStore";
 
 const inputClass =
   "mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none invalid:border-pink-500 invalid:text-pink-600 focus:invalid:border-pink-500 focus:invalid:ring-pink-500";
 
-const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const PropertyCreateForm: React.FC<{
+  onClose: () => void;
+  property?: Property;
+}> = ({ onClose, property }) => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmittingApi, setIsSubmittingApi] = useState(false);
+
+  const { fetchUserProperties } = usePropertyStore();
 
   const {
     register,
@@ -39,18 +46,31 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     // @ts-ignore
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      location: "",
-      price: undefined, // Or a specific number if you have a default
-      property_type: "",
-      status: "",
-      bedrooms: undefined,
-      bathrooms: undefined,
-      area: undefined,
-      year_built: undefined,
-      amenities: "",
-      images: [],
+      title: property?.title || "",
+      description: property?.description || "",
+      location: {
+        address: property?.location?.address || "",
+        city: property?.location?.city || "",
+        state: property?.location?.state || "",
+        zipCode: property?.location?.zipCode || "",
+      },
+      price: property?.price ?? undefined,
+      property_type: property?.propertyType || "", // Map from Property's camelCase to form's snake_case
+      status: property?.status || "",
+      features: {
+        bedrooms: property?.features?.bedrooms ?? undefined,
+        bathrooms: property?.features?.bathrooms ?? undefined,
+        area: property?.features?.area ?? undefined,
+        // Assuming form schema uses year_built (snake_case) for features
+        year_built: property?.features?.yearBuilt ?? undefined,
+      },
+      // Assuming amenities in Property type is string[], but form schema expects comma-separated string
+      amenities: Array.isArray(property?.amenities)
+        ? property.amenities.join(", ")
+        : typeof property?.amenities === "string"
+        ? property.amenities
+        : "",
+      images: property?.images || [],
     },
   });
 
@@ -62,12 +82,21 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     try {
       // The 'images' field is already part of 'data' thanks to ImageUploader and react-hook-form
       console.log("Submitting data:", data);
-      const response = await createProperty(data);
-      console.log("Property created:", response);
-      toast.success("Property created successfully!");
+      let response;
+      if (property) {
+        // If property exists, update it
+        response = await updateProperty(property.id, data);
+        console.log("Property updated:", response);
+        toast.success("Property updated successfully!");
+      } else {
+        response = await createProperty(data as PropertyFormData); // data should now match PropertyFormData
+        console.log("Property created:", response);
+        toast.success("Property created successfully!");
+      }
       // Optionally reset form or redirect:
       reset();
       onClose();
+      fetchUserProperties();
     } catch (error: any) {
       console.error("Failed to create property:", error);
       setApiError(
@@ -84,7 +113,7 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit as any)}
+      onSubmit={handleSubmit(onSubmit)}
       className="space-y-6 p-4 text-start max-w-2xl mx-auto bg-white shadow-md rounded-lg"
     >
       <h2 className="text-2xl font-semibold text-gray-800">
@@ -119,24 +148,68 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div>
         <Input
           className={inputClass}
-          label="Location"
-          id="location"
+          label="Address"
+          id="location.address"
           type="text"
           fullWidth
-          {...register("location")}
+          {...register("location.address")}
           disabled={isActuallySubmitting}
-          error={errors.location?.message}
+          error={errors.location?.address?.message}
         />
       </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <Input
+            className={inputClass}
+            label="City"
+            id="location.city"
+            type="text"
+            fullWidth
+            {...register("location.city")}
+            disabled={isActuallySubmitting}
+            error={errors.location?.city?.message}
+          />
+        </div>
+        <div>
+          <Input
+            className={inputClass}
+            label="State"
+            id="location.state"
+            type="text"
+            fullWidth
+            {...register("location.state")}
+            disabled={isActuallySubmitting}
+            error={errors.location?.state?.message}
+          />
+        </div>
+        <div>
+          <Input
+            className={inputClass}
+            label="Zip Code"
+            id="location.zipCode"
+            type="text"
+            fullWidth
+            {...register("location.zipCode")}
+            disabled={isActuallySubmitting}
+            error={errors.location?.zipCode?.message}
+          />
+        </div>
+      </div>
       <div>
         <Input
           className={inputClass}
-          label="Price"
+          label="Price ($)"
           id="price"
           type="number"
           step="any"
-          {...register("price")}
+          name="price"
+          onChange={(e) => {
+            const value = parseFloat(e.target.value);
+            // Ensure price is a valid number
+            if (!isNaN(value)) {
+              setValue("price", Number(value));
+            }
+          }}
           disabled={isActuallySubmitting}
           error={errors.price?.message}
         />
@@ -222,9 +295,9 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             label="Bedrooms"
             id="bedrooms"
             type="number"
-            {...register("bedrooms")}
+            {...register("features.bedrooms", { valueAsNumber: true })}
             disabled={isActuallySubmitting}
-            error={errors.bedrooms?.message}
+            error={errors.features?.bedrooms?.message}
           />
         </div>
         <div>
@@ -233,9 +306,9 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             label="Bathrooms"
             id="bathrooms"
             type="number"
-            {...register("bathrooms")}
+            {...register("features.bathrooms", { valueAsNumber: true })}
             disabled={isActuallySubmitting}
-            error={errors.bathrooms?.message}
+            error={errors.features?.bathrooms?.message}
           />
         </div>
       </div>
@@ -248,9 +321,9 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             id="area"
             type="number"
             step="any"
-            {...register("area")}
+            {...register("features.area", { valueAsNumber: true })}
             disabled={isActuallySubmitting}
-            error={errors.area?.message}
+            error={errors.features?.area?.message}
           />
         </div>
         <div>
@@ -259,9 +332,9 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             label="Year Built"
             id="year_built"
             type="number"
-            {...register("year_built")}
+            {...register("features.year_built", { valueAsNumber: true })}
             disabled={isActuallySubmitting}
-            error={errors.year_built?.message}
+            error={errors.features?.year_built?.message}
           />
         </div>
       </div>
@@ -289,12 +362,16 @@ const PropertyCreateForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <button
           type="submit"
           disabled={isActuallySubmitting}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:bg-slate-400"
+          className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:bg-slate-400"
         >
-          {isActuallySubmitting ? "Submitting..." : "Create Property"}{" "}
+          {isActuallySubmitting
+            ? "Submitting..."
+            : property
+            ? "Update Property"
+            : "Create Property"}{" "}
           &nbsp;&nbsp;{" "}
           {isActuallySubmitting && (
-            <Loader className="animate-spin h-8 w-8 text-blue-500" />
+            <Loader size={2} className="animate-spin h-8 w-8 text-blue-500" />
           )}
         </button>
       </div>

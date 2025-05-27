@@ -7,10 +7,19 @@ export interface User {
   createdAt: string;
 }
 
+export interface PropertyResponse {
+  total: number;
+  pages: number;
+  current_page: number;
+  page_size: number;
+  properties: Property[];
+}
+
 export interface Property {
   id: string;
   title: string;
   description: string;
+  user?: User; // Optional, can be populated with user details
   price: number;
   location: {
     address: string;
@@ -20,8 +29,8 @@ export interface Property {
     latitude?: number;
     longitude?: number;
   };
-  propertyType: 'house' | 'apartment' | 'land' | 'commercial';
-  status: 'for-sale' | 'for-rent';
+  propertyType: "house" | "apartment" | "land" | "commercial";
+  status: "for-sale" | "for-rent";
   features: {
     bedrooms: number;
     bathrooms: number;
