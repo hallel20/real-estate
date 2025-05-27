@@ -1,8 +1,9 @@
-import { lazy, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import Dialog from "../ui/Dialog";
 import Button from "../ui/Button";
 import { Edit } from "lucide-react";
 import { Property } from "../../types";
+import Spinner from "../Loading";
 
 const PropertyCreateForm = lazy(() => import("./PropertyForm"));
 
@@ -30,7 +31,9 @@ export default function EditProperty({
         <Edit className="h-4 w-4 mr-1" /> {title || "Edit"}
       </Button>
       <Dialog isOpen={open} onClose={handleClose}>
-        <PropertyCreateForm onClose={handleClose} property={property} />
+        <Suspense fallback={<Spinner />}>
+          <PropertyCreateForm onClose={handleClose} property={property} />
+        </Suspense>
       </Dialog>
     </>
   );
