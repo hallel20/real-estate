@@ -23,7 +23,7 @@ const MyPropertiesTab: React.FC<MyPropertiesTabProps> = ({
         <AddProperty />
       </div>
 
-      { isLoading ? (
+      {isLoading ? (
         <Spinner />
       ) : userProperties.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -70,8 +70,8 @@ const MyPropertiesTab: React.FC<MyPropertiesTabProps> = ({
                     </div>
                     <span className="text-xl font-bold text-gray-900">
                       {property.status === "for-rent"
-                        ? `$${property.price.toLocaleString()}/mo`
-                        : `$${property.price.toLocaleString()}`}
+                        ? `₦${property.price.toLocaleString()}/yr`
+                        : `₦${property.price.toLocaleString()}`}
                     </span>
                   </div>
                   <p className="text-gray-600 mb-4 line-clamp-2">

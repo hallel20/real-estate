@@ -24,7 +24,7 @@ const DashboardPage: React.FC = () => {
     fetchProperties,
     isLoading: isPropertiesLoading,
   } = usePropertyStore();
-  const { userInquiries, fetchUserInquiries } = useInquiryStore();
+  const { fetchUserInquiries } = useInquiryStore();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -42,7 +42,7 @@ const DashboardPage: React.FC = () => {
     fetchProperties,
   ]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" />;
   }
 
@@ -172,9 +172,8 @@ const DashboardPage: React.FC = () => {
                 path="inquiries"
                 element={
                   <InquiriesTab
-                    userInquiries={userInquiries}
+                    currentUserId={user?.id}
                     properties={properties}
-                    userChats={user?.chats || []} // Assuming user.chats is available
                   />
                 }
               />

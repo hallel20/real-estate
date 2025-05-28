@@ -53,7 +53,7 @@ const MyChatsList: React.FC<MyChatsListProps> = ({
       ) : (
         <div className="space-y-4">
           {userChats.map((chat) => {
-            const property = findProperty(chat.property_id);
+            const property = chat.property;
             // const otherUser = findOtherUserInChat(chat);
             return (
               <div key={chat.id} className="bg-white rounded-lg shadow-md p-6">

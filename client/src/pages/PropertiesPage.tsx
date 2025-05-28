@@ -78,7 +78,8 @@ const PropertiesPage: React.FC = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Properties</h1>
         <p className="text-gray-600">
-          Browse our extensive collection of properties to find your perfect match.
+          Browse our extensive collection of properties to find your perfect
+          match.
         </p>
       </div>
 
@@ -89,20 +90,30 @@ const PropertiesPage: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-gray-600">
-            {isLoading ? 'Loading properties...' : `${properties.length} properties found`}
+            {isLoading
+              ? "Loading properties..."
+              : `${properties.length} properties found`}
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={toggleViewMode}
-            className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+            className={`p-2 rounded-md ${
+              viewMode === "grid"
+                ? "bg-blue-100 text-blue-600"
+                : "bg-gray-100 text-gray-600"
+            }`}
             aria-label="Grid view"
           >
             <Grid className="h-5 w-5" />
           </button>
           <button
             onClick={toggleViewMode}
-            className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+            className={`p-2 rounded-md ${
+              viewMode === "list"
+                ? "bg-blue-100 text-blue-600"
+                : "bg-gray-100 text-gray-600"
+            }`}
             aria-label="List view"
           >
             <List className="h-5 w-5" />
@@ -127,19 +138,31 @@ const PropertiesPage: React.FC = () => {
       {/* Properties Grid/List */}
       {!isLoading && properties.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">No properties found</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            No properties found
+          </h3>
           <p className="text-gray-600 mb-4">
             Try adjusting your filters to see more results.
           </p>
         </div>
       ) : (
-        <div className={viewMode === 'grid' 
-          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" 
-          : "space-y-6"
-        }>
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              : "space-y-6"
+          }
+        >
           {properties.map((property) => (
-            <div key={property.id} className={viewMode === 'list' ? "bg-white rounded-lg shadow-md overflow-hidden" : ""}>
-              {viewMode === 'grid' ? (
+            <div
+              key={property.id}
+              className={
+                viewMode === "list"
+                  ? "bg-white rounded-lg shadow-md overflow-hidden"
+                  : ""
+              }
+            >
+              {viewMode === "grid" ? (
                 <PropertyCard property={property} />
               ) : (
                 <div className="flex flex-col md:flex-row">
@@ -153,33 +176,49 @@ const PropertiesPage: React.FC = () => {
                   <div className="md:w-2/3 p-6">
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className={`inline-block px-2 py-1 text-xs font-semibold rounded mb-2 ${
-                          property.status === 'for-sale' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
-                        }`}>
-                          {property.status === 'for-sale' ? 'For Sale' : 'For Rent'}
+                        <span
+                          className={`inline-block px-2 py-1 text-xs font-semibold rounded mb-2 ${
+                            property.status === "for-sale"
+                              ? "bg-blue-600 text-white"
+                              : "bg-green-600 text-white"
+                          }`}
+                        >
+                          {property.status === "for-sale"
+                            ? "For Sale"
+                            : "For Rent"}
                         </span>
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">{property.title}</h3>
+                        <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                          {property.title}
+                        </h3>
                       </div>
                       <span className="text-xl font-bold text-gray-900">
-                        {property.status === 'for-rent' 
-                          ? `$${property.price.toLocaleString()}/mo` 
-                          : `$${property.price.toLocaleString()}`
-                        }
+                        {property.status === "for-rent"
+                          ? `₦${property.price.toLocaleString()}/yr`
+                          : `₦${property.price.toLocaleString()}`}
                       </span>
                     </div>
-                    <p className="text-gray-600 mb-4 line-clamp-2">{property.description}</p>
+                    <p className="text-gray-600 mb-4 line-clamp-2">
+                      {property.description}
+                    </p>
                     <div className="flex items-center text-gray-600 mb-4">
                       <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{property.location.address}, {property.location.city}, {property.location.state}</span>
+                      <span className="text-sm">
+                        {property.location.address}, {property.location.city},{" "}
+                        {property.location.state}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-gray-600">
                       <div className="flex items-center space-x-4">
                         <span>{property.features.bedrooms} Beds</span>
                         <span>{property.features.bathrooms} Baths</span>
-                        <span>{property.features.area.toLocaleString()} sqft</span>
+                        <span>
+                          {property.features.area.toLocaleString()} sqft
+                        </span>
                       </div>
                       <button
-                        onClick={() => window.location.href = `/properties/${property.id}`}
+                        onClick={() =>
+                          (window.location.href = `/properties/${property.id}`)
+                        }
                         className="text-blue-600 hover:text-blue-800 font-medium"
                       >
                         View Details

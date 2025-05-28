@@ -17,9 +17,9 @@ const InquiriesTab: React.FC<InquiriesTabProps> = ({
   properties,
   currentUserId,
 }) => {
-  const [activeTab, setActiveTab] = useState<"inquiries" | "chats">(
-    "inquiries"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "sent-inquiries" | "received-inquiries" | "chats"
+  >("sent-inquiries");
 
   const {
     userInquiries,
@@ -42,19 +42,36 @@ const InquiriesTab: React.FC<InquiriesTabProps> = ({
     fetchUserChats();
   }, [fetchUserInquiries, fetchUserChats, currentUserId]);
 
+  const sentInquiries = userInquiries.filter(
+    (inq) => inq.user_id === currentUserId
+  );
+  const receivedInquiries = userInquiries.filter(
+    (inq) => inq.user_id !== currentUserId
+  );
+
   return (
     <div>
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200 mb-6">
         <button
           className={`py-2 px-4 text-sm font-medium ${
-            activeTab === "inquiries"
+            activeTab === "sent-inquiries"
               ? "border-b-2 border-blue-600 text-blue-600"
               : "text-gray-500 hover:text-gray-700"
           }`}
-          onClick={() => setActiveTab("inquiries")}
+          onClick={() => setActiveTab("sent-inquiries")}
         >
-          My Inquiries ({userInquiries.length})
+          Sent Inquiries ({sentInquiries.length})
+        </button>
+        <button
+          className={`py-2 px-4 text-sm font-medium ${
+            activeTab === "received-inquiries"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => setActiveTab("received-inquiries")}
+        >
+          Received Inquiries ({receivedInquiries.length})
         </button>
         <button
           className={`py-2 px-4 text-sm font-medium ${
@@ -64,16 +81,26 @@ const InquiriesTab: React.FC<InquiriesTabProps> = ({
           }`}
           onClick={() => setActiveTab("chats")}
         >
-          My Chats ({userChats?.length})
+          My Chats ({userChats?.length || 0})
         </button>
       </div>
 
       {/* Tab Content */}
-      {activeTab === "inquiries" && (
+      {activeTab === "sent-inquiries" && (
         <Suspense fallback={<Spinner />}>
           <MyInquiriesList
-            userInquiries={userInquiries}
-            properties={properties}
+            userInquiries={sentInquiries}
+            isLoading={isLoadingInquiries}
+            isSent={true}
+            error={errorInquiries}
+          />
+        </Suspense>
+      )}
+
+      {activeTab === "received-inquiries" && (
+        <Suspense fallback={<Spinner />}>
+          <MyInquiriesList
+            userInquiries={receivedInquiries}
             isLoading={isLoadingInquiries}
             error={errorInquiries}
           />

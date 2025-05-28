@@ -18,7 +18,7 @@ upload_bp = Blueprint('upload', __name__)
 
 @upload_bp.route('/', methods=['POST'])
 @jwt_required()
-@role_required('admin')
+# @role_required('admin')
 def upload_image():
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400

@@ -63,8 +63,8 @@ const FavoritesTab: React.FC<FavoritesTabProps> = ({ favoritePropertiesList }) =
                     </div>
                     <span className="text-xl font-bold text-gray-900">
                       {property.status === "for-rent"
-                        ? `$${property.price.toLocaleString()}/mo`
-                        : `$${property.price.toLocaleString()}`}
+                        ? `₦${property.price.toLocaleString()}/yr`
+                        : `₦${property.price.toLocaleString()}`}
                     </span>
                   </div>
                   <p className="text-gray-600 mb-4 line-clamp-2">
@@ -81,9 +81,7 @@ const FavoritesTab: React.FC<FavoritesTabProps> = ({ favoritePropertiesList }) =
                       size="sm"
                       className="flex items-center text-red-600 border-red-200 hover:bg-red-50"
                       onClick={() =>
-                        usePropertyStore
-                          .getState()
-                          .toggleFavorite(property.id)
+                        usePropertyStore.getState().toggleFavorite(property.id)
                       }
                     >
                       <Heart className="h-4 w-4 mr-1 fill-red-500" />

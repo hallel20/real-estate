@@ -105,7 +105,7 @@ def get_property(property_id):
 
 @properties_bp.route('', methods=['POST'])
 @jwt_required()
-@role_required('admin')
+# @role_required('admin')
 def create_property():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)

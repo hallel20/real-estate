@@ -46,8 +46,7 @@ export const useInquiryStore = create<InquiryState>((set, get) => ({
       const response = await api.get<Inquiry[]>(`/inquiries/user/${userId}`);
       const inquiries: Inquiry[] = response.data; // Replace with actual API response
 
-      const userInqs = inquiries.filter((i) => i.userId === userId);
-      set({ userInquiries: userInqs, isLoading: false });
+      set({ userInquiries: inquiries, isLoading: false });
     } catch {
       set({ error: "Failed to fetch user inquiries", isLoading: false });
     }

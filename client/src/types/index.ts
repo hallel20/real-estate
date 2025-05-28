@@ -19,6 +19,7 @@ export interface Property {
   id: string;
   title: string;
   description: string;
+  user_id: string;
   user?: User; // Optional, can be populated with user details
   price: number;
   location: {
@@ -50,8 +51,8 @@ export interface PropertyFilter {
   location?: string;
   minPrice?: number;
   maxPrice?: number;
-  propertyType?: Property['propertyType'];
-  status?: Property['status'];
+  propertyType?: Property["propertyType"];
+  status?: Property["status"];
   minBedrooms?: number;
   minBathrooms?: number;
   minArea?: number;
@@ -61,10 +62,12 @@ export interface PropertyFilter {
 export interface Inquiry {
   id: string;
   property_id: string;
-  userId: string;
+  user_id: string;
   message: string;
   email: string;
   name: string;
+  property?: Property;
+  property_title: string;
   createdAt: string;
   status: "pending" | "responded" | "closed";
 }
@@ -85,6 +88,7 @@ export interface Chat {
   inquiry_id: number | null; // Or string
   created_at: string; // ISO string
   updated_at: string; // ISO string
+  property?: Property;
   // Add other fields if your backend serializes them (e.g., last message snippet, other user info)
   // last_message?: string;
   // other_user?: { id: number; username: string; /* ... */ };

@@ -109,6 +109,7 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.Text, nullable=False)
     chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # User who sent this message
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -117,6 +118,7 @@ class Message(db.Model):
             'id': self.id,
             'message': self.message,
             'chat_id': self.chat_id,
+            'sender_id': self.sender_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
@@ -127,23 +129,29 @@ class Chat(db.Model):
     # Link to the Inquiry that originated this chat (if any)
     inquiry_id = db.Column(db.Integer, db.ForeignKey('inquiry.id'), nullable=True, unique=True)
     inquiry = db.relationship('Inquiry', foreign_keys=[inquiry_id], backref=db.backref('chat', uselist=False))
-    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    reciever_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Consider renaming to receiver_id
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Initial sender of the chat (inquirer)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Initial receiver of the chat (property owner)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
+    property = db.relationship('Property', foreign_keys=[property_id])
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    is_read = db.Column(db.Boolean, default=False, nullable=False) # Has the recipient of the last message read it?
+    last_message_sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # Who sent the very last message
 
-    def serialize(self):
+    def serialize(self, include_property=False):
         return {
             'id': self.id,
             'sender_id': self.sender_id,
-            'reciever_id': self.reciever_id,
+            'receiver_id': self.receiver_id,
             'property_id': self.property_id,
+            'is_read': self.is_read,
+            'last_message_sender_id': self.last_message_sender_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             # You might want to include message_ids or inquiry_id if needed, e.g.:
-            # 'message_ids': [msg.id for msg in self.messages],
-            # 'inquiry_id': self.inquiry.id if self.inquiry else None
+            'property': self.property.serialize() if include_property and self.property else None,
+        # 'message_ids': [msg.id for msg in self.messages],
+        # 'inquiry_id': self.inquiry.id if self.inquiry else None
         }
 
 class Inquiry(db.Model):
@@ -156,6 +164,9 @@ class Inquiry(db.Model):
     status = db.Column(db.String(50), default='pending', nullable=False) # e.g., pending, responded, closed
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc)) # This default is used
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationship to Property
+    property = db.relationship('Property', backref=db.backref('inquiries', lazy='dynamic'))
 
     def serialize(self):
         return {
@@ -163,13 +174,13 @@ class Inquiry(db.Model):
             'name': self.name,
             'email': self.email,
             'message': self.message,
-            'property_id': self.property_id,
+            'property_id': self.property_id, # Keep this for direct access
+            'property': self.property.serialize() if self.property else None, # Keep serialized property for convenience
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'user_id': self.user_id,
             'status': self.status
         }
-
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

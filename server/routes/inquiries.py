@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_req
 from models import db, Inquiry, Property, User, Chat, Message # Added Chat and Message
 from services.email_service import send_inquiry_notification_email  # Celery task stub
 from services.role_required import role_required # For authorization
+from sqlalchemy import or_ # Import or_
 from datetime import datetime, timezone
 
 inquiries_bp = Blueprint('inquiries', __name__)
@@ -48,12 +49,17 @@ def submit_inquiry():
     db.session.commit()
 
     user = User.query.filter_by(email=email).first()
-    if user:
+    # Use inquiry_user_id if available (for registered users), otherwise it's an anonymous inquiry
+    # The chat sender should be the user who made the inquiry.
+    chat_initiator_id = inquiry_user_id if inquiry_user_id else user.id if user else None # Fallback to user found by email
+    if chat_initiator_id: # Only create chat if we can identify the initiator
         chat = Chat(
-            sender_id=user.id, # The user who made the inquiry (can be different from property owner)
-            reciever_id=property_obj.user_id,  # Assuming the property owner is the receiver
+            sender_id=chat_initiator_id, 
+            receiver_id=property_obj.user_id,  # Property owner is the receiver
             property_id=property_id,
             inquiry_id=inquiry.id,  # Link the chat to the inquiry
+            last_message_sender_id=chat_initiator_id, # The inquirer sent the first "message" (the inquiry itself)
+            is_read=False # Property owner (receiver) has not read it yet
         )
         db.session.add(chat)
         # Commit here to get chat.id if needed immediately, or commit once at the end
@@ -63,6 +69,7 @@ def submit_inquiry():
         initial_chat_message = Message(
             message=message, # Use the inquiry's message as the first chat message
             chat_id=chat.id,
+            sender_id=chat_initiator_id, # The inquirer sent this message
             created_at=inquiry.created_at,  # Use the inquiry's created_at for consistency
         )
         db.session.add(initial_chat_message)
@@ -103,8 +110,16 @@ def get_user_inquiries(user_id):
     if current_user.id != user_id and current_user.role != 'admin':
         return jsonify({"error": "Unauthorized"}), 403
 
-    inquiries = Inquiry.query.filter_by(user_id=user_id).order_by(Inquiry.created_at.desc()).all()
-    return jsonify([inq.serialize() for inq in inquiries]), 200
+    # Fetch inquiries where the user_id is the sender OR the owner of the property
+    query = Inquiry.query.join(Property, Inquiry.property_id == Property.id).filter(
+        or_(
+            Inquiry.user_id == user_id,  # Inquiries sent by the user
+            Property.user_id == user_id   # Inquiries received for properties owned by the user
+        )
+    ).order_by(Inquiry.created_at.desc())
+    
+    inquiries_list = query.all()
+    return jsonify([inq.serialize() for inq in inquiries_list]), 200
 
 @inquiries_bp.route('/property/<int:property_id>', methods=['GET'])
 @jwt_required()
