@@ -60,9 +60,10 @@ const InquiryForm: React.FC<InquiryFormProps> = ({ propertyId }) => {
       await createInquiry({
         property_id: data.property_id,
         name: data.name,
-        userId: user?.id || "anonymous",
+        user_id: user?.id || "anonymous",
         message: data.message,
         email: data.email,
+        property_title: "",
       });
 
       setIsSubmitted(true);
