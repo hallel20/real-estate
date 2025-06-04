@@ -142,12 +142,12 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          // const response = await api.put(`/users/profile`, userData);
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          // const updatedUser = response.data;
+          const response = await api.put(`/users/profile`, userData);
+          // await new Promise((resolve) => setTimeout(resolve, 500));
+          const updatedUser = response.data;
 
           set((state) => ({
-            user: state.user ? { ...state.user, ...userData } : null,
+            user: state.user ? { ...state.user, ...updatedUser } : null,
             isLoading: false,
           }));
         } catch (error: any) {

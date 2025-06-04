@@ -19,6 +19,7 @@ interface PropertyState {
   fetchFavoriteProperties: () => Promise<void>;
   toggleFavorite: (propertyId: string) => void;
   setFilters: (filters: PropertyFilter) => void;
+  toggleFeatureProperty: (propertyId: string) => Promise<void>;
 }
 
 export const usePropertyStore = create<PropertyState>((set, get) => ({
@@ -87,7 +88,7 @@ export const usePropertyStore = create<PropertyState>((set, get) => ({
       );
       const properties: Property[] = response.data.properties;
 
-      const featured = properties.filter((p) => p.isFeatured);
+      const featured = properties.filter((p) => p.is_featured);
       set({ featuredProperties: featured, isLoading: false });
     } catch {
       set({ error: "Failed to fetch featured properties", isLoading: false });
@@ -175,5 +176,56 @@ export const usePropertyStore = create<PropertyState>((set, get) => ({
   setFilters: (filters) => {
     set({ filters });
     get().fetchProperties();
+  },
+
+  toggleFeatureProperty: async (propertyId: string) => {
+    // set({ isLoading: true, error: null });
+    const oldState = get();
+
+    const updatedProperty = oldState.properties.find(
+      (p) => Number(p.id) === Number(propertyId)
+    );
+
+    if (!updatedProperty) {
+      set({ error: "Property not found" });
+      return;
+    }
+
+    const property = {
+      ...updatedProperty,
+      is_featured: !updatedProperty.is_featured,
+    };
+
+    set((state) => ({
+      properties: state.properties.map((p) =>
+        p.id === propertyId ? property : p
+      ),
+      featuredProperties: property.is_featured
+        ? [
+            ...state.featuredProperties.filter((p) => p.id !== propertyId),
+            property,
+          ]
+        : state.featuredProperties.filter((p) => p.id !== propertyId),
+      userProperties: state.userProperties.map((p) =>
+        p.id === propertyId ? property : p
+      ),
+      currentProperty:
+        state.currentProperty?.id === propertyId
+          ? property
+          : state.currentProperty,
+      // isLoading: false,
+    }));
+
+    try {
+      api.patch<Property>(`/properties/${propertyId}/feature`);
+      // After updating, re-sort featuredProperties if necessary, e.g., by date or some other logic
+      // For now, just adding/removing is handled. If order matters, add sorting here.
+    } catch (error: any) {
+      set(oldState); // Revert to previous state
+      const errorMessage =
+        error.response?.data?.message || "Failed to toggle feature status";
+      console.error("Failed to toggle feature status:", error);
+      set({ error: errorMessage });
+    }
   },
 }));

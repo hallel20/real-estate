@@ -2,8 +2,8 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'user';
-  profileImage?: string;
+  role: "admin" | "user";
+  profile_image?: string;
   createdAt: string;
 }
 
@@ -22,6 +22,7 @@ export interface Property {
   user_id: string;
   user?: User; // Optional, can be populated with user details
   price: number;
+  is_featured: boolean;
   location: {
     address: string;
     city: string;
@@ -83,14 +84,18 @@ export interface Favorite {
 export interface Chat {
   id: number; // Or string, depending on your backend
   sender_id: number; // Or string
-  reciever_id: number; // Or string
+  sender: User;
+  receiver: User;
+  receiver_id: number; // Or string
   property_id: number; // Or string
   inquiry_id: number | null; // Or string
   created_at: string; // ISO string
   updated_at: string; // ISO string
   property?: Property;
-  // Add other fields if your backend serializes them (e.g., last message snippet, other user info)
-  // last_message?: string;
+  is_read: boolean;
+  // messages: Message[]; // Messages for a specific chat are usually fetched on demand, not with the list of all chats.
+  last_message_sender_id: number | null; // Can be null if no messages yet
+  last_message: Message | null; // A short preview of the last message
   // other_user?: { id: number; username: string; /* ... */ };
 }
 
@@ -98,6 +103,7 @@ export interface Message {
   id: number; // Or string
   chat_id: number; // Or string
   message: string;
+  sender_id: number; // Or string
   created_at: string; // ISO string
   updated_at: string; // ISO string
   // Add sender info if needed, though often messages imply the sender is the current user
