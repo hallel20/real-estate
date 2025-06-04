@@ -21,7 +21,7 @@ def upgrade():
     with op.batch_alter_table('chat', schema=None) as batch_op:
         batch_op.create_foreign_key(None, 'user', ['receiver_id'], ['id'])
         batch_op.create_foreign_key(None, 'user', ['last_message_sender_id'], ['id'])
-        batch_op.drop_column('reciever_id')
+        batch_op.drop_column('receiver_id')
 
     with op.batch_alter_table('message', schema=None) as batch_op:
         batch_op.add_column(sa.Column('sender_id', sa.Integer(), nullable=False))
@@ -37,7 +37,7 @@ def downgrade():
         batch_op.drop_column('sender_id')
 
     with op.batch_alter_table('chat', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('reciever_id', mysql.INTEGER(display_width=11), autoincrement=False, nullable=False))
+        batch_op.add_column(sa.Column('receiver_id', mysql.INTEGER(display_width=11), autoincrement=False, nullable=False))
         batch_op.drop_constraint(None, type_='foreignkey')
         batch_op.drop_constraint(None, type_='foreignkey')
 
