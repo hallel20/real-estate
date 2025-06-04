@@ -1,11 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Star } from "lucide-react"; // Import Star icon
 import { Property } from "../../../types";
 import Button from "../../../components/ui/Button";
 import AddProperty from "../../../components/property/AddProperty";
 import EditProperty from "../../../components/property/EditProperty";
 import Spinner from "../../../components/Loading";
 import DeleteProperty from "../../../components/property/DeleteProperty";
+import { useAuthStore } from "../../../store/authStore"; // To get user role
+import { usePropertyStore } from "../../../store/propertyStore";
 
 interface MyPropertiesTabProps {
   userProperties: Property[];
@@ -16,6 +19,14 @@ const MyPropertiesTab: React.FC<MyPropertiesTabProps> = ({
   userProperties,
   isLoading,
 }) => {
+  const { user } = useAuthStore(); // Get the authenticated user
+  const { toggleFeatureProperty } = usePropertyStore();
+
+  const handleFeatureProperty = (propertyId: string) => {
+    toggleFeatureProperty(propertyId);
+    console.log(`Toggle feature for property ID: ${propertyId}`);
+    // Example: await propertyStore.toggleFeatureProperty(propertyId);
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -85,6 +96,25 @@ const MyPropertiesTab: React.FC<MyPropertiesTabProps> = ({
                     </Link>
                     <EditProperty property={property} />
                     <DeleteProperty property={property} />
+                    {user?.role === "admin" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFeatureProperty(property.id)}
+                        className={`flex items-center ${
+                          property.is_featured // Assuming property has an is_featured flag
+                            ? "text-yellow-500 border-yellow-300 hover:bg-yellow-50"
+                            : "text-gray-600 border-gray-300 hover:bg-gray-100"
+                        }`}
+                      >
+                        <Star
+                          className={`h-4 w-4 mr-1 ${
+                            property.is_featured ? "fill-yellow-400" : ""
+                          }`}
+                        />
+                        {property.is_featured ? "Unfeature" : "Feature"}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
