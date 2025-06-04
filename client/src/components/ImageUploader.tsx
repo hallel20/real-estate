@@ -7,12 +7,14 @@ interface ImageUploaderProps<T extends FieldValues> {
   setValue: UseFormSetValue<T>;
   name: Path<T>; // The name of the field in react-hook-form for the image URLs array
   currentImages?: string[];
+  singleImage?: boolean;
 }
 
 const ImageUploader = <T extends FieldValues>({
   setValue,
   name,
   currentImages = [],
+  singleImage = false,
 }: ImageUploaderProps<T>) => {
   const [error, setError] = useState<string | null>(null);
   // Tracks uploading state for individual files or the whole batch
@@ -25,7 +27,7 @@ const ImageUploader = <T extends FieldValues>({
 
       setIsUploading(true);
       setError(null); // Clear previous errors
-      const newImageUrls: string[] = [...currentImages];
+      let newImageUrls: string[] = [...currentImages];
 
       for (const file of Array.from(files)) {
         const formData = new FormData();
@@ -38,7 +40,11 @@ const ImageUploader = <T extends FieldValues>({
           const { data } = response;
 
           if (data.secure_url) {
-            newImageUrls.push(data.secure_url);
+            if (singleImage) {
+              newImageUrls = [data.secure_url];
+            } else {
+              newImageUrls.push(data.secure_url);
+            }
           } else {
             console.error(
               "API upload error: secure_url not found in response",
@@ -57,7 +63,7 @@ const ImageUploader = <T extends FieldValues>({
       });
       setIsUploading(false);
     },
-    [setValue, name, currentImages]
+    [setValue, name, currentImages, singleImage]
   );
 
   const handleRemoveImage = (imageUrlToRemove: string) => {
@@ -84,7 +90,7 @@ const ImageUploader = <T extends FieldValues>({
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Camera className="h-5 w-5 mr-2" />
-          Choose Images
+          Choose Image{singleImage ? "" : "s"}
         </label>
         <input
           id={uploaderId}
@@ -106,7 +112,7 @@ const ImageUploader = <T extends FieldValues>({
       {currentImages && currentImages.length > 0 && (
         <div className="mt-4">
           <h3 className="text-sm font-medium text-gray-700 mb-2">
-            Uploaded Images:
+            Uploaded Image{singleImage ? "" : "s"}:
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {currentImages.map((imageUrl, index) => (

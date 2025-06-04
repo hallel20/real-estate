@@ -4,6 +4,7 @@ import { Home, User, Heart, MessageSquare, Edit } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { usePropertyStore } from "../../store/propertyStore";
 import { useInquiryStore } from "../../store/inquiryStore";
+import md5 from 'js-md5'; // Import md5
 import Button from "../../components/ui/Button";
 import Spinner from "../../components/Loading";
 
@@ -50,6 +51,18 @@ const DashboardPage: React.FC = () => {
     favoriteProperties.includes(p.id)
   );
 
+  const getProfileImageUrl = () => {
+    if (user?.profile_image) {
+      return user.profile_image;
+    }
+    if (user?.email) {
+      const emailHash = md5.md5(user.email.trim().toLowerCase());
+      return `https://www.gravatar.com/avatar/${emailHash}?d=404`; // 404 will allow fallback
+    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      user?.username?.charAt(0) || "U"
+    )}&background=random`;
+  };
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
@@ -61,13 +74,21 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex flex-col items-center">
               <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
-                <img
-                  src={
-                    user?.profileImage ||
-                    "https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg"
-                  }
+                <img // The onError event will handle Gravatar 404 and fallback to ui-avatars
+                  src={getProfileImageUrl()}
                   alt={user?.username}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // If Gravatar returns 404 (or any error), fallback to ui-avatars
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.includes("gravatar.com")) {
+                      // Only fallback if the error was from Gravatar
+                      target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user?.username?.charAt(0) || "U"
+                      )}&background=random`;
+                    }
+                    // If it's already ui-avatars or profile_image that failed, we don't want an infinite loop.
+                  }}
                 />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -187,8 +208,6 @@ const DashboardPage: React.FC = () => {
                   )
                 }
               />
-              <Route path="*" element={<Navigate to="properties" replace />} />{" "}
-              {/* Fallback for unknown sub-routes */}
             </Routes>
           </Suspense>
         </div>

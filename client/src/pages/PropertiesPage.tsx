@@ -1,51 +1,57 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { usePropertyStore } from '../store/propertyStore';
-import PropertyCard from '../components/property/PropertyCard';
-import PropertyFilter from '../components/property/PropertyFilter';
-import { PropertyFilter as FilterType } from '../types';
-import { Grid, List, MapPin } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { usePropertyStore } from "../store/propertyStore";
+import PropertyCard from "../components/property/PropertyCard";
+import PropertyFilter from "../components/property/PropertyFilter";
+import { PropertyFilter as FilterType } from "../types";
+import { useAuthStore } from "../store/authStore"; // Import useAuthStore
+import Button from "../components/ui/Button"; // Import Button component
+import { Grid, List, MapPin, Star } from "lucide-react";
 
 const PropertiesPage: React.FC = () => {
   const { properties, isLoading, error, setFilters, fetchFavoriteProperties } =
     usePropertyStore();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const { user } = useAuthStore(); // Get the authenticated user
 
   useEffect(() => {
     // Extract filters from URL params
     const urlFilters: FilterType = {};
-    
-    const type = searchParams.get('type');
+
+    const type = searchParams.get("type");
     if (type) urlFilters.propertyType = type as any;
-    
-    const status = searchParams.get('status');
+
+    const status = searchParams.get("status");
     if (status) urlFilters.status = status as any;
-    
-    const minPrice = searchParams.get('minPrice');
+
+    const minPrice = searchParams.get("minPrice");
     if (minPrice) urlFilters.minPrice = Number(minPrice);
-    
-    const maxPrice = searchParams.get('maxPrice');
+
+    const maxPrice = searchParams.get("maxPrice");
     if (maxPrice) urlFilters.maxPrice = Number(maxPrice);
-    
-    const location = searchParams.get('location');
+
+    const location = searchParams.get("location");
     if (location) urlFilters.location = location;
-    
-    const minBedrooms = searchParams.get('minBedrooms');
+
+    const minBedrooms = searchParams.get("minBedrooms");
     if (minBedrooms) urlFilters.minBedrooms = Number(minBedrooms);
-    
-    const minBathrooms = searchParams.get('minBathrooms');
+
+    const minBathrooms = searchParams.get("minBathrooms");
     if (minBathrooms) urlFilters.minBathrooms = Number(minBathrooms);
-    
-    const minArea = searchParams.get('minArea');
+
+    const minArea = searchParams.get("minArea");
     if (minArea) urlFilters.minArea = Number(minArea);
-    
-    const keywords = searchParams.get('keywords');
+
+    const keywords = searchParams.get("keywords");
     if (keywords) urlFilters.keywords = keywords;
-    
+
     // Apply filters
     setFilters(urlFilters);
   }, [searchParams, setFilters]);
+
+  const { toggleFeatureProperty } = usePropertyStore();
 
   useEffect(() => {
     fetchFavoriteProperties();
@@ -55,22 +61,29 @@ const PropertiesPage: React.FC = () => {
   const handleFilter = (filters: FilterType) => {
     // Update URL params
     const params = new URLSearchParams();
-    
-    if (filters.propertyType) params.set('type', filters.propertyType);
-    if (filters.status) params.set('status', filters.status);
-    if (filters.minPrice) params.set('minPrice', filters.minPrice.toString());
-    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
-    if (filters.location) params.set('location', filters.location);
-    if (filters.minBedrooms) params.set('minBedrooms', filters.minBedrooms.toString());
-    if (filters.minBathrooms) params.set('minBathrooms', filters.minBathrooms.toString());
-    if (filters.minArea) params.set('minArea', filters.minArea.toString());
-    if (filters.keywords) params.set('keywords', filters.keywords);
-    
+
+    if (filters.propertyType) params.set("type", filters.propertyType);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.minPrice) params.set("minPrice", filters.minPrice.toString());
+    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice.toString());
+    if (filters.location) params.set("location", filters.location);
+    if (filters.minBedrooms)
+      params.set("minBedrooms", filters.minBedrooms.toString());
+    if (filters.minBathrooms)
+      params.set("minBathrooms", filters.minBathrooms.toString());
+    if (filters.minArea) params.set("minArea", filters.minArea.toString());
+    if (filters.keywords) params.set("keywords", filters.keywords);
+
     setSearchParams(params);
   };
 
+  const handleFeatureProperty = (propertyId: string) => {
+    // Call the store action to toggle feature status
+    toggleFeatureProperty(propertyId);
+  };
+
   const toggleViewMode = () => {
-    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
+    setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
   };
 
   return (
@@ -215,14 +228,34 @@ const PropertiesPage: React.FC = () => {
                           {property.features.area.toLocaleString()} sqft
                         </span>
                       </div>
-                      <button
-                        onClick={() =>
-                          (window.location.href = `/properties/${property.id}`)
-                        }
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        View Details
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        {" "}
+                        {/* Container for buttons */}
+                        {user?.role === "admin" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleFeatureProperty(property.id)}
+                            className={`flex items-center ${
+                              property.is_featured // Assuming property has an is_featured flag
+                                ? "text-yellow-500 border-yellow-300 hover:bg-yellow-50"
+                                : "text-gray-600 border-gray-300 hover:bg-gray-100"
+                            }`}
+                          >
+                            <Star
+                              className={`h-4 w-4 mr-1 ${
+                                property.is_featured ? "fill-yellow-400" : ""
+                              }`}
+                            />
+                            {property.is_featured ? "Unfeature" : "Feature"}
+                          </Button>
+                        )}
+                        <Link to={`/properties/${property.id}`}>
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>

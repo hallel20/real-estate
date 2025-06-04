@@ -1,16 +1,35 @@
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Square, Calendar, Heart, Share2 } from 'lucide-react';
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  Calendar,
+  Heart,
+  Share2,
+  Star,
+} from "lucide-react";
 import { usePropertyStore } from '../store/propertyStore';
 import PropertyGallery from '../components/property/PropertyGallery';
 import InquiryForm from '../components/property/InquiryForm';
+import { useAuthStore } from "../store/authStore";
 import Button from '../components/ui/Button';
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { currentProperty, fetchPropertyById, isLoading, error, favoriteProperties, toggleFavorite } = usePropertyStore();
-  
+  const {
+    currentProperty,
+    fetchPropertyById,
+    isLoading,
+    error,
+    favoriteProperties,
+    toggleFavorite,
+    toggleFeatureProperty,
+  } = usePropertyStore();
+
   useEffect(() => {
+    // Fetch favorite properties to correctly display the favorite button status
     if (id) {
       fetchPropertyById(id);
     }
@@ -18,28 +37,38 @@ const PropertyDetailPage: React.FC = () => {
   
   const isFavorite = id ? favoriteProperties.includes(id) : false;
   
+  const { user } = useAuthStore(); // Get the authenticated user
+
   const handleFavoriteToggle = () => {
     if (id) {
       toggleFavorite(id);
     }
   };
-  
+
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: currentProperty?.title || 'Property Listing',
-        text: currentProperty?.description || 'Check out this property!',
-        url: window.location.href,
-      }).catch((error) => {
-        console.log('Error sharing', error);
-      });
+      navigator
+        .share({
+          title: currentProperty?.title || "Property Listing",
+          text: currentProperty?.description || "Check out this property!",
+          url: window.location.href,
+        })
+        .catch((error) => {
+          console.log("Error sharing", error);
+        });
     } else {
       // Fallback for browsers that don't support the Web Share API
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      alert("Link copied to clipboard!");
     }
   };
-  
+
+  const handleFeatureProperty = () => {
+    if (currentProperty?.id) {
+      toggleFeatureProperty(currentProperty.id); // Assuming toggleFavoriteProperty is available from usePropertyStore
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-16 flex justify-center">
@@ -47,7 +76,7 @@ const PropertyDetailPage: React.FC = () => {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -60,7 +89,7 @@ const PropertyDetailPage: React.FC = () => {
       </div>
     );
   }
-  
+
   if (!currentProperty) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -73,12 +102,16 @@ const PropertyDetailPage: React.FC = () => {
       </div>
     );
   }
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
@@ -163,6 +196,25 @@ const PropertyDetailPage: React.FC = () => {
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
+            {user?.role === "admin" && currentProperty && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFeatureProperty}
+                className={`flex items-center ${
+                  currentProperty.is_featured
+                    ? "text-yellow-500 border-yellow-300 hover:bg-yellow-50"
+                    : "text-gray-600 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <Star
+                  className={`h-4 w-4 mr-1 ${
+                    currentProperty.is_featured ? "fill-yellow-400" : ""
+                  }`}
+                />
+                {currentProperty.is_featured ? "Unfeature" : "Feature"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
