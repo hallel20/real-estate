@@ -79,7 +79,7 @@ def login():
     response = jsonify(user.serialize())
 
     # Set JWT access token in HttpOnly secure cookie
-    set_access_cookies(response, access_token, max_age=3600)
+    set_access_cookies(response, access_token)
 
     return response, 200
 

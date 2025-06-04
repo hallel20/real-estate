@@ -2,29 +2,16 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Property, Favorite
 from werkzeug.security import generate_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
 
 users_bp = Blueprint('users', __name__)
-
-def user_to_profile_dict(user):
-    return {
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'phone_number': user.phone_number,
-        'created_at': user.created_at.isoformat(),
-        'updated_at': user.updated_at.isoformat(),
-        'role': user.role,
-    }
 
 @users_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
     user_id = get_jwt_identity()
     user = User.query.get_or_404(user_id)
-    return jsonify(user_to_profile_dict(user)), 200
+    return jsonify(user.serialize()), 200
 
 @users_bp.route('/profile', methods=['PUT'])
 @jwt_required()
@@ -34,7 +21,7 @@ def update_profile():
     data = request.get_json()
 
     # Validate input if needed; here we assume basic update
-    updatable_fields = ['first_name', 'last_name', 'phone_number', 'email', 'username', 'password']
+    updatable_fields = ['first_name', 'last_name', 'phone_number', 'email', 'username', 'password', 'profile_image']
 
     for field in updatable_fields:
         if field in data:
@@ -43,9 +30,9 @@ def update_profile():
             else:
                 setattr(user, field, data[field])
 
-    user.updated_at = datetime.utcnow()
+    user.updated_at = datetime.now(timezone.utc)
     db.session.commit()
-    return jsonify(user_to_profile_dict(user)), 200
+    return jsonify(user.serialize()), 200
 
 
 @users_bp.route('/favorites/<int:property_id>', methods=['POST'])

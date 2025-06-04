@@ -170,6 +170,15 @@ def create_property():
 
     return jsonify(prop.serialize()), 201
 
+@properties_bp.route('/<int:property_id>/feature', methods=['PATCH'])
+@jwt_required()
+@role_required('admin')
+def feature_property(property_id):
+    property_obj = Property.query.get_or_404(property_id)
+    property_obj.is_featured = not property_obj.is_featured
+    db.session.commit()
+    return jsonify(property_obj.serialize())
+
 
 @properties_bp.route('/<int:property_id>', methods=['PUT'])
 @jwt_required()

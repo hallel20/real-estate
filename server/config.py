@@ -29,7 +29,7 @@ MAIL_USE_TLS_ENV = os.environ.get('MAIL_USE_TLS', 'True') # Default to True if n
 MAIL_USE_SSL_ENV = os.environ.get('MAIL_USE_SSL', 'False') # Default to False if not set
 MAIL_DEFAULT_SENDER_ENV = os.environ.get('MAIL_DEFAULT_SENDER')
 
-FRONTEND_URL_ENV = os.environ.get('FRONTEND_URL', 'http://localhost:3000') # Default frontend URL
+FRONTEND_URL_ENV = os.environ.get('FRONTEND_URL', 'http://localhost:3310') # Default frontend URL
 
 class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', DATABASE_URL)

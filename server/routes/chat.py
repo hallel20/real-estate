@@ -24,16 +24,8 @@ def get_chats():
         or_(Chat.sender_id == current_user_id, Chat.receiver_id == current_user_id)
     ).order_by(Chat.updated_at.desc()).all()
 
-    chats_data = []
-    made_changes = False
-    for chat in chats_query:
-        if not chat.is_read and chat.last_message_sender_id != current_user_id:
-            chat.is_read = True
-            made_changes = True
-        chats_data.append(chat.serialize(include_property=True))
-    if made_changes:
-        db.session.commit()
-    return jsonify(chats_data), 200
+    # The is_read status will now be handled by a dedicated endpoint when a chat is opened.
+    return jsonify([chat.serialize(include_property=True) for chat in chats_query]), 200
 
 @chat_bp.route('/<int:chat_id>/messages', methods=['GET'])
 @jwt_required()
@@ -43,11 +35,13 @@ def get_messages(chat_id):
     Ensures the user is authorized to access the chat.
     Ensures the current user is part of the chat.
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     
     chat = Chat.query.get(chat_id)
     if not chat:
         return jsonify({"error": "Chat not found"}), 404
+
+    print(chat.sender_id, chat.receiver_id, current_user_id)
 
     if chat.sender_id != current_user_id and chat.receiver_id != current_user_id:
         return jsonify({"error": "Unauthorized to view this chat"}), 403
@@ -62,7 +56,7 @@ def send_message(chat_id):
     Send a new message in a specific chat.
     Ensures the current user is part of the chat.
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     data = request.get_json()
     message_content = data.get('message')
 
@@ -96,3 +90,31 @@ def send_message(chat_id):
     db.session.commit()
 
     return jsonify(new_message.serialize()), 201
+
+@chat_bp.route('/<int:chat_id>/read', methods=['POST'])
+@jwt_required()
+def mark_chat_as_read(chat_id):
+    """
+    Mark a specific chat as read by the current user.
+    """
+    current_user_id = int(get_jwt_identity())
+    chat = Chat.query.get(chat_id)
+
+    if not chat:
+        return jsonify({"error": "Chat not found"}), 404
+
+    # Ensure the current user is a participant in the chat
+    if chat.sender_id != current_user_id and chat.receiver_id != current_user_id:
+        return jsonify({"error": "Unauthorized to mark this chat as read"}), 403
+
+    # Only mark as read if the current user is not the sender of the last message
+    # and the chat is currently unread.
+    if not chat.is_read and chat.last_message_sender_id != current_user_id:
+        chat.is_read = True
+        chat.updated_at = datetime.now(timezone.utc) # Optionally update timestamp
+        db.session.commit()
+        return jsonify({"message": "Chat marked as read", "chat": chat.serialize(include_property=True)}), 200
+    elif chat.is_read:
+        return jsonify({"message": "Chat already marked as read", "chat": chat.serialize(include_property=True)}), 200
+    else: # User is the last sender, no action needed from them to mark as read
+        return jsonify({"message": "No action needed to mark chat as read by sender of last message", "chat": chat.serialize(include_property=True)}), 200

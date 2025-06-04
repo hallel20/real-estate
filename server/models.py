@@ -14,6 +14,14 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     role = db.Column(db.String(20), default='user')
+    is_active = db.Column(db.Boolean, default=True)
+    profile_image = db.Column(db.String(200))
+
+    # Relationships
+    properties = db.relationship('Property', backref='user', lazy=True)
+    inquiries = db.relationship('Inquiry', backref='user', lazy=True)
+    favorites = db.relationship('Favorite', backref='user', lazy=True)
+
 
     # Fields for password reset
     reset_token = db.Column(db.String(100), unique=True, nullable=True)
@@ -27,6 +35,8 @@ class User(db.Model):
             'first_name': self.first_name,
             'last_name': self.last_name,
             'phone_number': self.phone_number,
+            'profile_image': self.profile_image,
+            'is_active': self.is_active,
             'role': self.role,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
@@ -38,6 +48,7 @@ class Property(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(200), nullable=True)
+    is_featured = db.Column(db.Boolean, default=False)
     address = db.Column(db.String(200), nullable=False)
     city = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(100), nullable=False)
@@ -66,6 +77,7 @@ class Property(db.Model):
             'description': self.description,
             # 'user': self.user.serialize() if self.user else None, # Requires user relationship to be loaded
             'price': self.price,
+            'is_featured': self.is_featured,
             'location': {
                 'address': self.address,
                 'city': self.city,
@@ -130,7 +142,9 @@ class Chat(db.Model):
     inquiry_id = db.Column(db.Integer, db.ForeignKey('inquiry.id'), nullable=True, unique=True)
     inquiry = db.relationship('Inquiry', foreign_keys=[inquiry_id], backref=db.backref('chat', uselist=False))
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Initial sender of the chat (inquirer)
+    sender = db.relationship('User', foreign_keys=[sender_id])
     receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Initial receiver of the chat (property owner)
+    receiver = db.relationship('User', foreign_keys=[receiver_id])
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     property = db.relationship('Property', foreign_keys=[property_id])
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -138,12 +152,19 @@ class Chat(db.Model):
     is_read = db.Column(db.Boolean, default=False, nullable=False) # Has the recipient of the last message read it?
     last_message_sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # Who sent the very last message
 
+    def _retrieve_last_message(self):
+        return Message.query.filter_by(chat_id=self.id).order_by(Message.created_at.desc()).first().serialize()
+
+
     def serialize(self, include_property=False):
         return {
             'id': self.id,
             'sender_id': self.sender_id,
+            'sender': self.sender.serialize() if self.sender else None,
             'receiver_id': self.receiver_id,
+            'receiver': self.receiver.serialize() if self.receiver else None,
             'property_id': self.property_id,
+            'last_message': self._retrieve_last_message(),
             'is_read': self.is_read,
             'last_message_sender_id': self.last_message_sender_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
